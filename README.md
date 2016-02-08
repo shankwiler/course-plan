@@ -109,17 +109,6 @@ GET `/parser/data/:cc/:year/:uni/:major/` - using the course plan method of repr
 
 POST `/parser/data/:cc/:year/:uni/:major/` - accepts a JSON object with college_name, uni_name, major_name, courses, and units.
 
-## To-do
-
-- Choosenum->choices should be arrays within arrays as with choices because there could be a choice class1 & class2 which count as one course (as in the case of UCSD computer science)
-
-- When deployed, /parser needs to be protected
-
-- Possibly add functionality to view plans for different years at once (because some universities are seriously slacking. smh UCSC it's 2016)
-
-
-
-
 
 
 

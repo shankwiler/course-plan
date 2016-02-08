@@ -1,0 +1,59 @@
+extends layout
+
+block content
+  h1 course plan
+  //
+    div.menu
+      ul
+        li
+          a.active(href='/plan') plan
+        li
+          a.active(href='/about') about
+        li
+          a.active(href='/contact') contact
+
+  div(class = 'college-div')
+    h2 college and year
+    div.select
+      select(class = 'college-select')
+        option(id="")
+    div.select.year-select-container
+      select.year-select
+
+  
+  div(class = 'uni-major')
+    div(class = 'uni')
+      h2 university
+      div.x-container(class = 'row-0')
+        div.x
+          |x
+      div.select(class = 'row-0')
+        select(class = 'uni-select row-0')   
+      br(class = 'row-0')
+    div(class = 'major')
+      h2 major
+      div.select(class = 'row-0')
+        select(class = 'major-select row-0')
+      br(class = 'row-0')
+      
+  div(class = 'btn-container')
+    div(class = 'plus')
+      |+
+      
+  button(class = 'find-plan-btn')
+    |find plan
+  
+  div.courses.hidden
+    h2 courses
+    div.course-boxes
+  
+  //
+    h2 What needs to be done:
+    ul
+      li add total units count
+      li add margin to bottom of course box container
+      li add navbar at top, better idea for navigation/info?
+      li add button to get a different plan/ go back a plan
+      li ^ add backend functionality for getting the correct plan "index" (sorted by total unit count
+      li parse more majors and unis!
+    

@@ -1,0 +1,279 @@
+/*body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+*/
+
+.html, body {
+  height: 100%;
+  min-height: 100%;
+}
+
+body {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  background: #1295D8;
+  text-align: center;
+  font-family: 'Lato', sans-serif;
+  font-weight: 400;
+}
+
+h1 {
+  font-weight: 700;
+  font-size: 5em;
+  margin: 0px 0px 0px 0px;
+  color: #FFB511;
+  text-shadow: 1px 1px 1px black;
+}
+
+/*
+.menu {
+  text-align: center;
+}
+
+ul {
+  background-color: black;
+  list-style-type: none;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+li {
+  margin-left: 5px;
+  margin-right: 5px;
+  display: inline;
+}
+
+li a {
+  color: red;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+*/
+
+h2 {
+  margin: 5px 5px 5px 5px;
+  font-size: 1.75em;
+}
+
+.college-div {
+  width: calc(100% / 2 - 10px);
+  margin: 0 auto;
+  box-shadow: 1px 1px 1px black;
+  background-color: #72CDF4;
+}
+
+.uni-major {
+  margin-top: 10px;
+}
+
+.uni {
+  background-color: #72CDF4;
+}
+
+.major {
+  background-color: #72CDF4;/*#FFE552;*/
+}
+
+.uni,.major {
+  margin-left: 5px;
+  margin-right: 5px;
+  text-align: center;
+  box-shadow: 1px 1px 1px black;
+  width: calc(100% / 2 - 10px);
+  float: left;
+  display: inline-block;
+}
+
+.uni,.major,.college-div {
+  padding-bottom: 5px;
+}
+
+.courses {
+  min-height: 100%;
+  height: 100%;
+  display: none;/*display: inline-block; when plan loaded*/
+  
+  margin-top: 10px;
+  margin-left: 5px;
+  margin-right: 5px;
+  text-align: center;
+  box-shadow: 1px 1px 1px black;
+  width: calc(100% - 10px);
+  background-color: #72CDF4;
+}
+
+.btn-container {
+  padding: 0;
+  margin-left: 0px;
+  margin-right: 5px;
+  width: 100%;
+  text-align: center;
+}
+
+.btn-container div {
+  margin-top: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+  /*font-size: 30px;*/
+  /*border: 1px solid black;*/
+  /*box-shadow: 1px 1px 1px black;*/
+  border-radius: 50%;
+  text-align: center;
+  width: 35px;
+  height: 35px;
+  display: inline-block;
+  line-height: 100%;
+  background-color: #72CDF4;
+  color: white;
+}
+
+.x-container {
+  padding: 0;
+  margin-left: 0px;
+  margin-right: 5px;
+  width: 20px;
+  display: inline;
+}
+
+.x-container .x {
+  border-radius: 50%;
+  text-align: center;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  line-height: 120%;
+  white-space: nowrap;
+  background-color: #1295D8;
+  color: white;
+}
+
+.x:hover {
+  background-color: #1da7ed;
+}
+
+.btn-container .plus {
+  font-size: 30px;
+  line-height: 100%;
+}
+
+.plus:hover {
+  background-color: #97daf7;
+}
+
+.btn-container .check {
+  font-size: 25px;
+  line-height: 130%;
+}
+
+.find-plan-btn {
+  margin-top: 10px;
+  background-color: #FFB511;
+  font-size: 2.5em;
+  padding: 10px 20px 10px 20px;
+  border-radius: 28px;
+  border: none;
+  color: white;
+  outline: none;
+  box-shadow: 1px 1px 1px black;
+}
+
+.find-plan-btn:hover {
+  background: #ffc23d;
+}
+
+.find-plan-btn:hover, .plus:hover, .x:hover {
+  cursor: pointer;
+}
+
+.year-select-container {
+  margin-left: 5px;
+}
+
+/* Thank you to lugolabs for their helpful code found at:
+https://github.com/lugolabs/tutorials/tree/master/pretty-select */
+.select {
+  margin-top: 3px;
+  margin-bottom: 3px;
+  text-align: center;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.select select {
+  outline: none;
+  -webkit-appearance: none;
+  display: block;
+  padding: 0.5em 1em 0.5em 1em;
+  margin: 0;
+  border: none;
+  background: white;
+  color: gray;
+  line-height: normal;
+  font-size: 1em;
+  box-shadow: 1px 1px 1px black;
+  max-width: 100%;
+}
+
+.uni .select {
+  max-width: calc(100% - 25px); /*x btn is 20px wide, 5px margin*/
+}
+
+.box {
+  width: calc(50% - 10px);
+  height: 4em;
+  background-color: white;
+  margin: 5px 5px 5px 5px;
+  float: left;
+  display: inline-block;
+  text-align: center;
+  box-shadow: 1px 1px 1px black;
+  border-radius: 7px;
+}
+
+.box ul {
+  list-style-type: none;
+  margin: 0px 0px 0px 0px;
+  padding: 0px;
+  height: 100%;
+}
+
+.box ul li {
+  margin: 0px 0px 0px 0px;
+  display: inline;
+  float: left;
+  height: 100%;
+}
+
+li.units {
+  width: 20%;
+  font-size: 3em;
+}
+
+li.name {
+  width: 50%;
+  font-size: 1.5em;
+  line-height: 2em; /* eyeballed to get the text centered vertically... */
+}
+
+li.logos {
+  width: calc(30% - 7px);
+  padding-top: 3px;
+  overflow: scroll;
+}
+
+@media screen and (max-width: 768px) {
+  h1 {
+    font-size: 4em;
+  }
+  .box {
+    width: calc(100% - 10px);
+  }
+}

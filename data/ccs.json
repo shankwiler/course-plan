@@ -1,0 +1,60 @@
+{
+  "diablovalleycollege": {
+    "15-16": {
+      "COMSC 210": 4,
+      "COMSC 260": 4,
+      "MATH 192": 5,
+      "MATH 193": 5,
+      "MATH 194 ": 3,
+      "MATH 294": 5,
+      "MATH 292": 5,
+      "PHYS 130": 4,
+      "PHYS 230": 4,
+      "ENGL 122": 3,
+      "ENGL 123": 3,
+      "ENGL 126": 3,
+      "BIOSC 130": 5,
+      "BIOSC 131": 5,
+      "CHEM 120": 5,
+      "CHEM 121": 5,
+      "CHEM 226": 5,
+      "CHEM 227": 5,
+      "BIOSC 120": 5,
+      "BIOSC 140": 5,
+      "PHYS 231": 4,
+      "MATH 194": 3,
+      "MATH 195": 4,
+      "COMSC 165": 4,
+      "COMSC 200": 4,
+      "CHEM 120 ": 5,
+      "PHYS 230 ": 4,
+      "MATH 192 ": 5,
+      "COMSC 200 ": 4,
+      "COMSC 255": 4,
+      "COMSC 255 ": 4,
+      "HIST 122": 3,
+      "PHILO 130": 3,
+      "SOCIO 122": 3,
+      "COMM 121": 3,
+      "COMSC 110": 4,
+      "PHYS 130 ": 4,
+      "COMSC 110 ": 4,
+      "COMSC 171": 2,
+      "COMSC 256": 4
+    }
+  },
+  "deanzacollege": {
+    "15-16": {
+      "CIS 22C": 4.5,
+      "CIS 26B": 4.5,
+      "MATH 1A ": 5,
+      "MATH 1B": 5,
+      "MATH 1B ": 5,
+      "MATH 1C": 5,
+      "MATH 2A ": 5,
+      "MATH 2B": 5,
+      "MATH 2A": 5,
+      "MATH 1A": 5
+    }
+  }
+}

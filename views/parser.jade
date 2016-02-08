@@ -1,0 +1,23 @@
+doctype html
+html
+  head
+  body
+    h1 parser
+    div.selections
+      select.college-select
+      select.year-select
+      select.uni-select
+      select.major-select
+    div(style="display:inline-block;")
+      iframe.plan(style="display:inline-block;")
+      form.data(action="/parser/test" method="post" style="display:inline-block; vertical-align: top;")
+        div.messages
+        textarea.courses(name="courses" rows="20" cols="60")
+        br
+        textarea.units(rows="10" cols="60")
+        br
+        button
+          |submit
+    
+    script(src='/javascripts/jquery-2.1.3.min.js')
+    script(src='/javascripts/parser.js')

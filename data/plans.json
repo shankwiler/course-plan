@@ -76,6 +76,56 @@
             "COMPSCI 70"
           ],
           "name": "Electrical Engineering & Computer Sciences, Lower Division B.S."
+        },
+        "chemicalengineeringlowerdivisionbs": {
+          "required": [
+            "CHEM 120",
+            "CHEM 121",
+            "CHEM 226",
+            "CHEM 227",
+            "BIOSC 130",
+            "ENGIN 240",
+            "ENGIN 136",
+            "MATH 192",
+            "MATH 193",
+            "MATH 292",
+            "MATH 194",
+            "MATH 294",
+            "PHYS 130",
+            "PHYS 230",
+            "PHYS 231",
+            "ENGL 122",
+            "ENGIN 230"
+          ],
+          "choices": [],
+          "choosenum": [],
+          "missing": [],
+          "name": "Chemical Engineering, Lower Division B.S."
+        },
+        "chemicalengineeringmaterialsscienceengineeringlowerdivisionbs": {
+          "required": [
+            "CHEM 120",
+            "CHEM 121",
+            "CHEM 226",
+            "CHEM 227",
+            "BIOSC 130",
+            "ENGIN 240",
+            "ENGIN 136",
+            "MATH 192",
+            "MATH 193",
+            "MATH 292",
+            "MATH 194",
+            "MATH 294",
+            "PHYS 130",
+            "PHYS 230",
+            "PHYS 231",
+            "ENGL 122",
+            "ENGIN 230"
+          ],
+          "choices": [],
+          "choosenum": [],
+          "missing": [],
+          "name": "Chemical Engineering & Materials Science & Engineering, Lower Division B.S."
         }
       },
       "universityofcaliforniadavis": {

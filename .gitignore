@@ -1,3 +1,10 @@
 .DS_Store
 node_modules
 npm-debug.log
+rethinkdb_data
+
+dbtest.js
+delete.js
+delete.json
+test.js
+test.json

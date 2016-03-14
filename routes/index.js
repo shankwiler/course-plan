@@ -11,6 +11,62 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'course-plan' })
 })
 
+router.get('/ccs', (req, res) => {
+  db.findCcs((stat, result) => {
+    res.status(stat).json(result)
+  })
+})
+
+router.get(/^\/years.*/, (req, res) => {
+  var split, cc, yrs, nameInd
+  split = req.url.split('/')
+  cc = split[2]
+  if(split[split.length -1] === '')
+    split = split.slice(0, -1)
+  if (split.length !== 3 || split[2] === '') {
+    res.status(400).end('format: /years/cc/')
+    return
+  }
+  db.findYears(cc, (stat, result) => {
+    res.status(stat).json(result)
+  })
+})
+
+router.get(/^\/unis.*/, function(req, res) {
+  var split, cc, year
+  split = req.url.split('/')
+  // get rid of trailing whitespace if ending / is added
+  if (split[split.length - 1] === '')
+    split = split.slice(0, -1)
+  if (split.length !== 4) {
+    res.status(400).send('format: /unis/communitycollege/year')
+    return
+  }
+  cc = split[2]
+  year = split[3]
+  db.findUnis(cc, year, (stat, result) => {
+    res.status(stat).json(result)
+  })
+})
+
+router.get(/^\/majors.*/, function(req, res) {
+  var urlSplit, college, uni, year
+  urlSplit = req.url.split('/').slice(2)
+  // get rid of trailing whitespace if ending / is added
+  if (urlSplit[urlSplit.length - 1] === '')
+    urlSplit = urlSplit.slice(0, -1)
+  if (urlSplit.length !== 3) {
+    res.status(400).end('format: /majors/communitycollege/year/university/')
+    return
+  }
+  college = urlSplit[0]
+  year = urlSplit[1]
+  uni = urlSplit[2]
+  db.findMajors(college, year, uni, (stat, result) => {
+    res.status(stat).json(result)
+  })
+})
+
 router.get(/^\/plan.*/, function(req, res) {
   var urlSplit, cc, year, uniMajors, rank, valid
   urlSplit = req.url.split('/').slice(2)
@@ -69,62 +125,6 @@ router.get(/^\/plan.*/, function(req, res) {
     res.json(newData)
   }
 })
-
-router.get(/^\/unis.*/, function(req, res) {
-  var split, cc, year
-  split = req.url.split('/')
-  // get rid of trailing whitespace if ending / is added
-  if (split[split.length - 1] === '')
-    split = split.slice(0, -1)
-  if (split.length !== 4) {
-    res.status(400).send('format: /unis/communitycollege/year')
-    return
-  }
-  cc = split[2]
-  year = split[3]
-  db.findUnis(cc, year, (stat, result) => {
-    res.status(stat).json(result)
-  })
-})
-
-router.get(/^\/majors.*/, function(req, res) {
-  var urlSplit, college, uni, year
-  urlSplit = req.url.split('/').slice(2)
-  // get rid of trailing whitespace if ending / is added
-  if (urlSplit[urlSplit.length - 1] === '')
-    urlSplit = urlSplit.slice(0, -1)
-  if (urlSplit.length !== 3) {
-    res.status(400).end('format: /majors/communitycollege/year/university/')
-    return
-  }
-  college = urlSplit[0]
-  year = urlSplit[1]
-  uni = urlSplit[2]
-  db.findMajors(college, year, uni, (stat, result) => {
-    res.status(stat).json(result)
-  })
-})
-
-router.get(/^\/years.*/, (req, res) => {
-  var split, cc, yrs, nameInd
-  split = req.url.split('/')
-  cc = split[2]
-  if(split[split.length -1] === '')
-    split = split.slice(0, -1)
-  if (split.length !== 3 || split[2] === '') {
-    res.status(400).end('format: /years/cc/')
-    return
-  }
-  db.findYears(cc, (stat, result) => {
-    res.status(stat).json(result)
-  })
-})
-
-router.get('/ccs', (req, res) => {
-  db.findCcs((stat, result) => {
-    res.status(stat).json(result)
-  })
-})     
 
 // TODO look back over airbnb style guide. Find things to fix such as dot
 // vs bracket notation etc.

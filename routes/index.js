@@ -82,23 +82,9 @@ router.get(/^\/unis.*/, function(req, res) {
   }
   cc = split[2]
   year = split[3]
-  db.findUnis(cc, year, (result) => {
-    console.log('result', result)
+  db.findUnis(cc, year, (stat, result) => {
+    res.status(stat).json(result)
   })
-  if (!(cc in plans)) {
-    res.status(404).send(cc + ' not found')
-    return
-  }
-  if (!(year in plans[cc])) {
-    res.status(404).send(year + ' not found for ' + cc)
-    return
-  }
-  var ret = {}
-  Object.keys(plans[cc][year]).forEach(function(uni) {
-    if (uni !== 'name')
-      ret[uni] = plans[cc][year][uni]['name']
-  })
-  res.json(ret)
 })
 
 router.get(/^\/majors.*/, function(req, res) {
@@ -114,25 +100,9 @@ router.get(/^\/majors.*/, function(req, res) {
   college = urlSplit[0]
   year = urlSplit[1]
   uni = urlSplit[2]
-  if (!(college in plans)) {
-    res.status(404).end(college + ' not found')
-    return
-  }
-  if (!(year in plans[college])) {
-    res.status(404).end(year + ' not found as a year for ' + college)
-    return
-  }
-  if (!(uni in plans[college][year])) {
-    res.status(404).end(uni + ' not found as a university for ' + college
-      + ' in ' + year)
-    return
-  }
-  var ret = {}
-  Object.keys(plans[college][year][uni]).forEach(function(major) {
-    if (major !== 'name')
-      ret[major] = plans[college][year][uni][major]['name']
+  db.findMajors(college, year, uni, (stat, result) => {
+    res.status(stat).json(result)
   })
-  res.json(ret)
 })
 
 router.get(/^\/years.*/, (req, res) => {
@@ -145,14 +115,14 @@ router.get(/^\/years.*/, (req, res) => {
     res.status(400).end('format: /years/cc/')
     return
   }
-  db.findYears(cc, (result) => {
-    res.json(result)
+  db.findYears(cc, (stat, result) => {
+    res.status(stat).json(result)
   })
 })
 
 router.get('/ccs', (req, res) => {
-  db.findCcs((result) => {
-    res.json(result)
+  db.findCcs((stat, result) => {
+    res.status(stat).json(result)
   })
 })     
 

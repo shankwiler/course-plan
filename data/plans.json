@@ -126,6 +126,29 @@
           "choosenum": [],
           "missing": [],
           "name": "Chemical Engineering & Materials Science & Engineering, Lower Division B.S."
+        },
+        "economicslowerdivisionba": {
+          "required": [
+            "ECON 220",
+            "ECON 221"
+          ],
+          "choices": [
+            [
+              [
+                "MATH 192",
+                "MATH 193"
+              ],
+              [
+                "MATH 182",
+                "MATH 183"
+              ]
+            ]
+          ],
+          "choosenum": [],
+          "missing": [
+            "STAT 20 or STAT 21"
+          ],
+          "name": "Economics, Lower Division B.A."
         }
       },
       "universityofcaliforniadavis": {

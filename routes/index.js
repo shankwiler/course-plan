@@ -6,8 +6,16 @@ var plans = require('../data/plans.json')
 var ccs = require('../data/ccs.json')
 var db = require('../db.js')
 
+router.get('/test', (req, res) => {
+  db.getPlan('diablovalleycollege', '96-97', 'universityofcaliforniaberkeley1', 'computersciencelowerdivisionba', (stat, result) => {
+    console.log(result)
+    res.status(stat).json(result)
+    res.end()
+  })
+})
+
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', (req, res) => {
   res.render('index', { title: 'course-plan' })
 })
 
@@ -68,8 +76,7 @@ router.get(/^\/majors.*/, function(req, res) {
 })
 
 router.get(/^\/plan.*/, function(req, res) {
-  var urlSplit, cc, year, uniMajors, rank, valid
-  urlSplit = req.url.split('/').slice(2)
+  var urlSplit = req.url.split('/').slice(2)
   // get rid of trailing whitespace if ending / is added
   if (urlSplit[urlSplit.length - 1] === '')
     urlSplit = urlSplit.slice(0, -1)
@@ -77,20 +84,69 @@ router.get(/^\/plan.*/, function(req, res) {
     res.status(400).send('format: /plan/communitycollege/year/uni,major/uni,major/')
     return
   }
-  cc = urlSplit[0]
-  year = urlSplit[1]
-  if (!(cc in ccs) || !(cc in plans)) {
-    res.status(404).send(cc + ' not found')
-    return
-  }
-  if (!(year in plans[cc])) {
-    res.status(404).send(year + ' not found for ' + cc)
-    return
-  }
-  
+  var cc = urlSplit[0]
+  var year = urlSplit[1]
   // generate the list of university/major combinations
-  uniMajors = []
+  var uniMajors = []
   var valid = true
+  urlSplit.slice(2).forEach((item) => {
+    if (!valid)
+      return
+    var separated = item.split(',')
+    var currUni = separated[0]
+    var currMajor = separated[1]
+    db.getPlan(cc, year, currUni, currMajor, (stat, planData) => {
+      if (stat !== 200) {
+        valid = false
+        res.status(stat).json(data)
+        return
+      }
+      uniMajors.push({
+        'uni': currUni,
+        'major': currMajor,
+        'plan': planData
+      })
+      if (uniMajors.length === urlSplit.slice(2).length) {
+        // generate json w/ courses, universities they're for, and their unit counts
+        var data, newData
+        data = courseLists(cc, year, uniMajors)[0] // 0 index is the most efficient
+        // newData stores the courses, their units, and universities they're for
+        newData = {'courses':{}}
+        Object.keys(data['courses']).forEach((crs) => {
+          var unis, crsInfo
+          unis = data['courses'][crs]
+          crsInfo = {
+            'unis': unis,
+            'units': ccs[cc][year][crs]
+          }
+          newData['courses'][crs] = crsInfo
+        })
+        newData['units'] = data['units']
+  
+        res.json(newData)
+      }
+    })
+  })
+  /*
+  // generate json w/ courses, universities they're for, and their unit counts
+  var data, newData
+  data = courseLists(cc, year, uniMajors)[0] // 0 index is the most efficient
+  // newData stores the courses, their units, and universities they're for
+  newData = {'courses':{}}
+  Object.keys(data['courses']).forEach((crs) => {
+    var unis, crsInfo
+    unis = data['courses'][crs]
+    crsInfo = {
+      'unis': unis,
+      'units': ccs[cc][year][crs]
+    }
+    newData['courses'][crs] = crsInfo
+  })
+  newData['units'] = data['units']
+  
+  res.json(newData)
+  */
+  /*
   urlSplit.slice(2).forEach((item) => {
     if (valid) {
       var separated = item.split(',')
@@ -124,6 +180,7 @@ router.get(/^\/plan.*/, function(req, res) {
     
     res.json(newData)
   }
+  */
 })
 
 // TODO look back over airbnb style guide. Find things to fix such as dot
@@ -138,7 +195,7 @@ function courseLists(cc, year, uniMajors) {
   
   // add the required courses for each university
   uniMajors.forEach((uniMajor) => {
-    var plan = plans[cc][year][uniMajor.uni][uniMajor.major]
+    var plan = uniMajor['plan']
     plan['required'].forEach((crs) => {
       if (crs in reqs)
         reqs[crs].push(uniMajor.uni)
@@ -150,7 +207,7 @@ function courseLists(cc, year, uniMajors) {
   // compile the data of course options
   var data = []
   uniMajors.forEach((uniMajor) => {
-    var plan = plans[cc][year][uniMajor.uni][uniMajor.major]
+    var plan = uniMajor['plan']
     plan['choices'].forEach((choice) => {
       data.push({'uni':uniMajor.uni, 'courses': choice})
     })
@@ -174,7 +231,7 @@ function courseLists(cc, year, uniMajors) {
     combo.forEach((grp) => {
       grp['courses'].forEach((crs) => {
         if (crs in courseList) {
-          if (courseList[crs].indexOf(grp['uni']) == -1) {
+          if (courseList[crs].indexOf(grp['uni']) === -1) {
             courseList[crs].push(grp['uni'])
           }
         }

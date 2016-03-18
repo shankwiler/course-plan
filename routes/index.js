@@ -40,7 +40,7 @@ router.get(/^\/years.*/, (req, res) => {
   })
 })
 
-router.get(/^\/unis.*/, function(req, res) {
+router.get(/^\/unis.*/, (req, res) => {
   var split, cc, year
   split = req.url.split('/')
   // get rid of trailing whitespace if ending / is added
@@ -57,7 +57,7 @@ router.get(/^\/unis.*/, function(req, res) {
   })
 })
 
-router.get(/^\/majors.*/, function(req, res) {
+router.get(/^\/majors.*/, (req, res) => {
   var urlSplit, college, uni, year
   urlSplit = req.url.split('/').slice(2)
   // get rid of trailing whitespace if ending / is added
@@ -75,7 +75,7 @@ router.get(/^\/majors.*/, function(req, res) {
   })
 })
 
-router.get(/^\/plan.*/, function(req, res) {
+router.get(/^\/plan.*/, (req, res) => {
   var urlSplit = req.url.split('/').slice(2)
   // get rid of trailing whitespace if ending / is added
   if (urlSplit[urlSplit.length - 1] === '')
@@ -110,77 +110,10 @@ router.get(/^\/plan.*/, function(req, res) {
         // generate json w/ courses, universities they're for, and their unit counts
         var data, newData
         data = courseLists(cc, year, uniMajors)[0] // 0 index is the most efficient
-        // newData stores the courses, their units, and universities they're for
-        newData = {'courses':{}}
-        Object.keys(data['courses']).forEach((crs) => {
-          var unis, crsInfo
-          unis = data['courses'][crs]
-          crsInfo = {
-            'unis': unis,
-            'units': ccs[cc][year][crs]
-          }
-          newData['courses'][crs] = crsInfo
-        })
-        newData['units'] = data['units']
-  
-        res.json(newData)
+        res.json(data)
       }
     })
   })
-  /*
-  // generate json w/ courses, universities they're for, and their unit counts
-  var data, newData
-  data = courseLists(cc, year, uniMajors)[0] // 0 index is the most efficient
-  // newData stores the courses, their units, and universities they're for
-  newData = {'courses':{}}
-  Object.keys(data['courses']).forEach((crs) => {
-    var unis, crsInfo
-    unis = data['courses'][crs]
-    crsInfo = {
-      'unis': unis,
-      'units': ccs[cc][year][crs]
-    }
-    newData['courses'][crs] = crsInfo
-  })
-  newData['units'] = data['units']
-  
-  res.json(newData)
-  */
-  /*
-  urlSplit.slice(2).forEach((item) => {
-    if (valid) {
-      var separated = item.split(',')
-      var currUni = separated[0]
-      var currMajor = separated[1]
-      if (separated.length > 1 &&
-        currUni in plans[cc][year] && currMajor in plans[cc][year][currUni])
-        uniMajors.push({'uni': currUni, 'major': currMajor})
-      else {
-        res.status(404).end(item + ' not found')
-        valid = false
-      }
-    }
-  })
-  if (valid) {
-    // generate json w/ courses, universities they're for, and their unit counts
-    var data, newData
-    data = courseLists(cc, year, uniMajors)[0]
-    // newData stores the courses, their units, and universities they're for
-    newData = {'courses':{}}
-    Object.keys(data['courses']).forEach((crs) => {
-      var unis, crsInfo
-      unis = data['courses'][crs]
-      crsInfo = {
-        'unis': unis,
-        'units': ccs[cc][year][crs]
-      }
-      newData['courses'][crs] = crsInfo
-    })
-    newData['units'] = data['units']
-    
-    res.json(newData)
-  }
-  */
 })
 
 // TODO look back over airbnb style guide. Find things to fix such as dot
@@ -246,7 +179,14 @@ function courseLists(cc, year, uniMajors) {
   var courseLists = courseLists.map((crsList) => {
     var unitCnt = 0
     Object.keys(crsList).forEach((crs) => {
-      unitCnt += ccs[cc][year][crs]
+      // also change the courseList to hold both the universities for each
+      // course AND the unit count for that course
+      var units = ccs[cc][year][crs]
+      crsList[crs] = {
+        'unis': crsList[crs],
+        'units': units
+      }
+      unitCnt += units
     })
     return {'courses': crsList, 'units': unitCnt}
   })

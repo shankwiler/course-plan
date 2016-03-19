@@ -1,5 +1,6 @@
 var express = require('express')
 var fs = require('fs')
+var Promise = require('bluebird')
 var router = express.Router()
 var http = require('http')
 var plans = require('../data/plans.json')
@@ -98,7 +99,7 @@ router.get(/^\/plan.*/, (req, res) => {
     db.getPlan(cc, year, currUni, currMajor, (stat, planData) => {
       if (stat !== 200) {
         valid = false
-        res.status(stat).json(data)
+        res.status(stat).json(planData)
         return
       }
       uniMajors.push({
@@ -108,9 +109,12 @@ router.get(/^\/plan.*/, (req, res) => {
       })
       if (uniMajors.length === urlSplit.slice(2).length) {
         // generate json w/ courses, universities they're for, and their unit counts
-        var data, newData
-        data = courseLists(cc, year, uniMajors)[0] // 0 index is the most efficient
-        res.json(data)
+        courseLists(cc, year, uniMajors, (err, data) => {
+          if (err) {
+            throw err
+          }
+          res.json(data[0]) // 0 index is the most efficient
+        })
       }
     })
   })
@@ -122,7 +126,7 @@ router.get(/^\/plan.*/, (req, res) => {
 // data for course options, rather than doing it separately (w/ reqs).
 // may be cleaner.
 
-function courseLists(cc, year, uniMajors) {
+function courseLists(cc, year, uniMajors, cb) {
   // The meat of this site. Finds the optimal course plan
   var reqs = {}
   
@@ -175,34 +179,48 @@ function courseLists(cc, year, uniMajors) {
     courseLists.push(courseList)
   })
   
-  // change the course lists to include their unit count
-  var courseLists = courseLists.map((crsList) => {
-    var unitCnt = 0
-    Object.keys(crsList).forEach((crs) => {
+  var getUnits = Promise.promisify(db.getUnits)
+  var unitCnt = 0
+  var indices = []
+  courseLists.forEach((el, i) => {
+    indices.push(i)
+  })
+  Promise.map(indices, (i) => {
+    return Promise.map(Object.keys(courseLists[i]), (crs) => {
       // also change the courseList to hold both the universities for each
       // course AND the unit count for that course
-      var units = ccs[cc][year][crs]
-      crsList[crs] = {
-        'unis': crsList[crs],
-        'units': units
-      }
-      unitCnt += units
+      return getUnits(cc, year, crs)
+      .then((units) => {
+        courseLists[i][crs] = {
+          'unis': courseLists[i][crs],
+          'units': units
+        }
+        unitCnt += units
+      })
+      .error((err) => {
+        cb('error getting units')
+      })
     })
-    return {'courses': crsList, 'units': unitCnt}
+    .then(() => {
+      courseLists[i] = {
+        'courses': courseLists[i],
+        'units': unitCnt
+      }
+    })
   })
-  
-  // sort the list so lowest count is first
-  courseLists.sort((lstA, lstB) => {
-    if (lstA['units'] > lstB['units'])
-      return 1
-    if (lstA['units'] < lstB['units'])
-      return -1
-    return 0
+  .then(() => {
+    // sort the list so lowest count is first
+    courseLists.sort((lstA, lstB) => {
+      if (lstA['units'] > lstB['units'])
+        return 1
+      if (lstA['units'] < lstB['units'])
+        return -1
+      return 0
+    })
   })
-  
-  // every possible course path is returned, with the optimal one
-  // being in the 0 index
-  return courseLists
+  .then(() => {
+    cb(null, courseLists)
+  })
 }
 
 function findCombos(data) {

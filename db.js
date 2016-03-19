@@ -219,7 +219,7 @@ module.exports.getPlan = (cc, year, uni, major, cb) => {
     cb(200, row)
   })
   .error((err) => {
-    if (err.name === 'ReqlDriverError' && 'No more rows in the cursor.') {
+    if (err.name === 'ReqlDriverError' && err.message === 'No more rows in the cursor.') {
       module.exports.findFault(cc, year, uni, major, (errMsg) => {
         cb(404, {
           err: errMsg
@@ -231,4 +231,20 @@ module.exports.getPlan = (cc, year, uni, major, cb) => {
     }
   })
 }
-  
+
+module.exports.getUnits = (cc, year, course, cb) => {
+  r.connect({db: 'course_plan'})
+  .then((conn) => {
+    return r.table('units').getAll([cc, year, course], {index: 'cc_year_course'})('units')
+            .run(conn)
+  })
+  .then((cursor) => {
+    return cursor.next()
+  })
+  .then((row) => {
+    cb(null, row)
+  })
+  .error((err) => {
+    cb(err, null)
+  })
+}

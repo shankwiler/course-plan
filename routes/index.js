@@ -1,10 +1,7 @@
 var express = require('express')
-var fs = require('fs')
 var Promise = require('bluebird')
 var router = express.Router()
 var http = require('http')
-var plans = require('../data/plans.json')
-var ccs = require('../data/ccs.json')
 var db = require('../db.js')
 
 router.get('/test', (req, res) => {

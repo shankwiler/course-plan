@@ -4,14 +4,6 @@ var router = express.Router()
 var http = require('http')
 var db = require('../db.js')
 
-router.get('/test', (req, res) => {
-  db.getPlan('diablovalleycollege', '96-97', 'universityofcaliforniaberkeley1', 'computersciencelowerdivisionba', (stat, result) => {
-    console.log(result)
-    res.status(stat).json(result)
-    res.end()
-  })
-})
-
 /* GET home page. */
 router.get('/', (req, res) => {
   res.render('index', { title: 'course-plan' })

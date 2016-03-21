@@ -5,6 +5,7 @@ var Promise = require('bluebird')
 module.exports.findCcs = (cb) => {
   // callback accepts (status, json)
   var conn = null
+  var ccs = {}
   r.connect({db: 'course_plan'})
   .then((connection) => {
     conn = connection
@@ -14,67 +15,72 @@ module.exports.findCcs = (cb) => {
     return cursor.toArray()
   })
   .then((result) => {
-    var ret = {}
-    var ccs = {}
-    var added = 0
-    result.forEach((cc) => {
-      // for each unique college, get its real (formatted) name and add it
-      // a getAll must be used to find a plan that contains the right college name
-      r.table('plans')
-      .getAll(cc, {index: 'college'})
-      .pluck('college_name')
+    // for each unique college, get its real (formatted) name and add it
+    // a getAll must be used to find a plan that contains the right college name
+    return Promise.map(result, (cc) => {
+      return r.table('plans')
+      .getAll(cc, {index: 'college'})('college_name')
       .run(conn)
       .then((ccCursor) => {
         return ccCursor.next()
       })
-      .then((row) => {
-        ccs[cc] = row['college_name']
-        added += 1
-        if (added === result.length) {
-          cb(200, ccs)
-        }
+      .then((ccName) => {
+        ccs[cc] = ccName
       })
       .error((err) => {
         throw err
       })
     })
   })
-  .error((err) => {
-    throw err
+  .then(() => {
+    cb(200, ccs)
+  })
+  .error(() => {
+    cb(500, null)
+  })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
   })
 }
 
-
 module.exports.findYears = (cc, cb) => {
+  var conn = null
   r.connect({db: 'course_plan'})
-  .then((conn) => {
-    return r.table('plans').getAll(cc, {index: 'college'})
-          .pluck('year').distinct()
-          .run(conn)
+  .then((c) => {
+    conn = c
+    return r.table('plans').getAll(cc, {index: 'college'})('year')
+            .distinct()
+            .run(conn)
   })
   .then((cursor) => {
     return cursor.toArray()
   })
-  .then((result) => {
-    var ret = result.map((el) => {
-      return el['year']
-    })
-    if (ret.length === 0) {
+  .then((years) => {
+    if (years.length === 0) {
       cb(404, {
         error: cc + ' is not a valid cc.'
       })
     } else {
-      cb(200, ret)
+      cb(200, years)
     }
   })
   .error((err) => {
     throw err
   })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
+  })
 }
 
 module.exports.findUnis = (cc, year, cb) => {
+  var conn = null
   r.connect({db: 'course_plan'})
-  .then((conn) => {
+  .then((c) => {
+    conn = c
     return r.table('plans').getAll([cc, year], {index: 'college_year'})
             .pluck('uni', 'uni_name').distinct()
             .run(conn)
@@ -101,11 +107,18 @@ module.exports.findUnis = (cc, year, cb) => {
   .error((err) => {
     throw err
   })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
+  })
 }
 
 module.exports.findMajors = (cc, year, uni, cb) => {
+  var conn = null
   r.connect({db: 'course_plan'})
-  .then((conn) => {
+  .then((c) => {
+    conn = c
     return r.table('plans')
             .getAll([cc, year, uni], {index: 'college_year_uni'})
             .pluck('major', 'major_name').distinct()
@@ -130,14 +143,19 @@ module.exports.findMajors = (cc, year, uni, cb) => {
   .error((err) => {
     throw err
   })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
+  })
 }
 
 module.exports.findFault = (cc, year, uni, major, cb) => {
   // cb accepts a failure message
-  var failureFound = false
   if (!cc) {
     throw 'no cc passed to findFault'
   }
+  var failureFound = false
   var conn = null
   r.connect({db: 'course_plan'})
   // first check if the cc is in the db
@@ -204,11 +222,18 @@ module.exports.findFault = (cc, year, uni, major, cb) => {
   .error((err) => {
     throw err
   })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
+  })
 }
 
 module.exports.getPlan = (cc, year, uni, major, cb) => {
+  var conn = null
   r.connect({db: 'course_plan'})
-  .then((conn) => {
+  .then((c) => {
+    conn = c
     return r.table('plans')
             .getAll([cc, year, uni, major], {index: 'college_year_uni_major'})('plan')
             .run(conn)
@@ -231,11 +256,18 @@ module.exports.getPlan = (cc, year, uni, major, cb) => {
       throw err
     }
   })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
+  })
 }
 
 module.exports.getUnits = (cc, year, course, cb) => {
+  var conn = null
   r.connect({db: 'course_plan'})
-  .then((conn) => {
+  .then((c) => {
+    conn = c
     return r.table('units').getAll([cc, year, course], {index: 'cc_year_course'})('units')
             .run(conn)
   })
@@ -247,6 +279,11 @@ module.exports.getUnits = (cc, year, course, cb) => {
   })
   .error((err) => {
     cb(err, null)
+  })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
   })
 }
 
@@ -279,8 +316,8 @@ module.exports.insertOrUpdatePlan = (cc, year, uni, major, reqBody, cb) => {
 var updatePlan = Promise.promisify((cc, year, uni, major, plan, cb) => {
   var conn = null
   r.connect({db: 'course_plan'})
-  .then((connection) => {
-    conn = connection
+  .then((c) => {
+    conn = c
     return r.table('plans')
             .getAll([cc, year, uni, major], {index: 'college_year_uni_major'})
             .run(conn)
@@ -300,6 +337,11 @@ var updatePlan = Promise.promisify((cc, year, uni, major, plan, cb) => {
   })
   .error((err) => {
     cb(err)
+  })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
   })
 })
 
@@ -323,8 +365,8 @@ var addOrUpdateUnits = Promise.promisify((cc, year, unitsObj, cb) => {
 var updateUnits = Promise.promisify((cc, year, course, units, cb) => {
   var conn = null
   r.connect({db: 'course_plan'})
-  .then((connection) => {
-    conn = connection
+  .then((c) => {
+    conn = c
     return r.table('units').getAll([cc, year, course], {index: 'cc_year_course'}).run(conn)
   })
   .then((cursor) => {
@@ -339,11 +381,18 @@ var updateUnits = Promise.promisify((cc, year, course, units, cb) => {
   .error((err) => {
     cb(err)
   })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
+  })
 })
 
 var addUnits = Promise.promisify((cc, year, course, units, cb) => {
+  var conn = null
   r.connect({db: 'course_plan'})
-  .then((conn) => {
+  .then((c) => {
+    conn = c
     return r.table('units').insert({
       'cc': cc,
       'year': year,
@@ -357,11 +406,18 @@ var addUnits = Promise.promisify((cc, year, course, units, cb) => {
   .error((err) => {
     cb(err)
   })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
+  })
 })
 
 var addPlan = Promise.promisify((cc, year, uni, major, reqBody, cb) => {
+  var conn = null
   r.connect({db: 'course_plan'})
-  .then((conn) => {
+  .then((c) => {
+    conn = c
     return r.table('plans').insert({
       'college': cc,
       'college_name': reqBody['college_name'],
@@ -378,5 +434,10 @@ var addPlan = Promise.promisify((cc, year, uni, major, reqBody, cb) => {
   })
   .error(() => {
     throw err
+  })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
   })
 })

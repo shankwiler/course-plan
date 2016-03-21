@@ -3,8 +3,6 @@ var router = express.Router()
 var http = require('http')
 var db = require('../db.js')
 var fs = require('fs')
-var plans = require('../data/plans.json')
-var ccs = require('../data/ccs.json')
 
 router.get('/', function(req, res, next) {
   res.render('parser', {title: 'parse' })

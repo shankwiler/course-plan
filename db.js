@@ -2,11 +2,77 @@
 var r = require('rethinkdb')
 var Promise = require('bluebird')
 
+var config = {
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT) || 28015,
+  db: 'course_plan'
+}
+
+module.exports.setup = () => {
+  var conn = null
+  r.connect({host: config.host, port: config.port})
+  .then((c) => {
+    conn = c
+    return r.dbCreate(config.db).run(conn)
+  })
+  .then(() => {
+    console.log('db created')
+    return r.db(config.db).tableCreate('plans').run(conn)
+  })
+  .then(() => {
+    console.log('plans table created')
+    return r.db(config.db).table('plans').indexCreate('college').run(conn)
+  })
+  .then(() => {
+    return r.db(config.db).table('plans').indexCreate('college_year',
+      [r.row('college'), r.row('year')]).run(conn)
+  })
+  .then(() => {
+    return r.db(config.db).table('plans').indexCreate('college_year_uni',
+      [r.row('college'), r.row('year'), r.row('uni')]).run(conn)
+  })
+  .then(() => {
+    return r.db(config.db).table('plans').indexCreate('college_year_uni_major',
+    [r.row('college'), r.row('year'), r.row('uni'), r.row('major')]).run(conn)
+  })
+  .then(() => {
+    console.log('plans indices added')
+    return r.db(config.db).tableCreate('units').run(conn)
+  })
+  .then(() => {
+    console.log('units table created')
+    return r.db(config.db).table('units').indexCreate('cc').run(conn)
+  })
+  .then(() => {
+    return r.db(config.db).table('units').indexCreate('cc_year',
+      [r.row('cc'), r.row('year')]).run(conn)
+  })
+  .then(() => {
+    return r.db(config.db).table('units').indexCreate('cc_year_course',
+    [r.row('cc'), r.row('year'), r.row('course')]).run(conn)
+  })
+  .then(() => {
+    console.log('finished database setup')
+  })
+  .error((err) => {
+    if (err.name === 'ReqlOpFailedError') {
+      console.log('database already set up')
+    } else {
+      throw err
+    }
+  })
+  .finally(() => {
+    if (conn) {
+      conn.close()
+    }
+  })
+}
+    
 module.exports.findCcs = (cb) => {
   // callback accepts (status, json)
   var conn = null
   var ccs = {}
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   .then((connection) => {
     conn = connection
     return r.table('plans').distinct({index: 'college'}).run(conn)
@@ -47,7 +113,7 @@ module.exports.findCcs = (cb) => {
 
 module.exports.findYears = (cc, cb) => {
   var conn = null
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   .then((c) => {
     conn = c
     return r.table('plans').getAll(cc, {index: 'college'})('year')
@@ -78,7 +144,7 @@ module.exports.findYears = (cc, cb) => {
 
 module.exports.findUnis = (cc, year, cb) => {
   var conn = null
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   .then((c) => {
     conn = c
     return r.table('plans').getAll([cc, year], {index: 'college_year'})
@@ -116,7 +182,7 @@ module.exports.findUnis = (cc, year, cb) => {
 
 module.exports.findMajors = (cc, year, uni, cb) => {
   var conn = null
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   .then((c) => {
     conn = c
     return r.table('plans')
@@ -157,7 +223,7 @@ module.exports.findFault = (cc, year, uni, major, cb) => {
   }
   var failureFound = false
   var conn = null
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   // first check if the cc is in the db
   .then((connection) => {
     conn = connection
@@ -231,7 +297,7 @@ module.exports.findFault = (cc, year, uni, major, cb) => {
 
 module.exports.getPlan = (cc, year, uni, major, cb) => {
   var conn = null
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   .then((c) => {
     conn = c
     return r.table('plans')
@@ -265,7 +331,7 @@ module.exports.getPlan = (cc, year, uni, major, cb) => {
 
 module.exports.getUnits = (cc, year, course, cb) => {
   var conn = null
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   .then((c) => {
     conn = c
     return r.table('units').getAll([cc, year, course], {index: 'cc_year_course'})('units')
@@ -315,7 +381,7 @@ module.exports.insertOrUpdatePlan = (cc, year, uni, major, reqBody, cb) => {
 
 var updatePlan = Promise.promisify((cc, year, uni, major, plan, cb) => {
   var conn = null
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   .then((c) => {
     conn = c
     return r.table('plans')
@@ -364,7 +430,7 @@ var addOrUpdateUnits = Promise.promisify((cc, year, unitsObj, cb) => {
 
 var updateUnits = Promise.promisify((cc, year, course, units, cb) => {
   var conn = null
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   .then((c) => {
     conn = c
     return r.table('units').getAll([cc, year, course], {index: 'cc_year_course'}).run(conn)
@@ -390,7 +456,7 @@ var updateUnits = Promise.promisify((cc, year, course, units, cb) => {
 
 var addUnits = Promise.promisify((cc, year, course, units, cb) => {
   var conn = null
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   .then((c) => {
     conn = c
     return r.table('units').insert({
@@ -415,7 +481,7 @@ var addUnits = Promise.promisify((cc, year, course, units, cb) => {
 
 var addPlan = Promise.promisify((cc, year, uni, major, reqBody, cb) => {
   var conn = null
-  r.connect({db: 'course_plan'})
+  r.connect({db: config.db})
   .then((c) => {
     conn = c
     return r.table('plans').insert({

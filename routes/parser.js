@@ -1,6 +1,7 @@
 var express = require('express')
 var router = express.Router()
 var http = require('http')
+var db = require('../db.js')
 var fs = require('fs')
 var plans = require('../data/plans.json')
 var ccs = require('../data/ccs.json')
@@ -111,21 +112,19 @@ router.get(/^\/data.*/, (req, res) => {
   year = split[3]
   uni = split[4]
   major = split[5]
-  if (plans[cc] && plans[cc][year] && plans[cc][year][uni] && plans[cc][year][uni][major]) {
-    var majorData = plans[cc][year][uni][major]
-    var coursePlan = {
-      'required': majorData['required'],
-      'choices': majorData['choices'],
-      'choosenum': majorData['choosenum'],
-      'missing': majorData['missing'],
+
+  db.getPlan(cc, year, uni, major, (stat, data) => {
+    if (stat !== 200) {
+      res.status(stat).json(data)
+      return
     }
-    res.json({
-      'courses': coursePlan,
-      'units': findCourseUnitsForPlan(cc, year, coursePlan)
+    findCourseUnitsForPlan(cc, year, data, (units) => {
+      res.json({
+        'courses': data,
+        'units': units
+      })
     })
-  }
-  else
-    res.status(404).end('not found')
+  })
 })
 
 router.post(/^\/data.*/, (req, res) => {
@@ -140,6 +139,9 @@ router.post(/^\/data.*/, (req, res) => {
   uni = split[4]
   major = split[5]
   
+  db.insertOrUpdatePlan(cc, year, uni, major, req.body, () => {res.send('ok'); console.log('ok')})
+  
+  /*
   if (!plans[cc]) {
     plans[cc] = {}
     plans[cc]['name'] = req.body.college_name
@@ -162,7 +164,7 @@ router.post(/^\/data.*/, (req, res) => {
   plans[cc][year][uni][major]['name'] = req.body.major_name
   
   
-  /*console.log(JSON.stringify(req.body.courses, null, '  ').replace(/\\n/g, '\n').replace(/\\\"/g, '"'))*/
+  //console.log(JSON.stringify(req.body.courses, null, '  ').replace(/\\n/g, '\n').replace(/\\\"/g, '"'))
   
   fs.writeFile(__dirname + '/../data/plans.json', JSON.stringify(plans, null, '  '), (err) => {
     if (err)
@@ -184,6 +186,8 @@ router.post(/^\/data.*/, (req, res) => {
   })
   
   res.send('success')
+  */
+  
 })
 
 router.get(/^\/guess.*/, (req, res) => {
@@ -277,7 +281,7 @@ function pullOpts(url, sep, callback) {
         list = lines.map((line) => {
           valSubstr = line.substring(line.search('value="') + 7)
           endValLoc = valSubstr.search('"')
-          link = valSubstr.substring(0, endValLoc).replace('&amp', '&')
+          link = valSubstr.substring(0, endValLoc).replace('&amp;', '&')
           uni = valSubstr.substring(valSubstr.search('>') + 1)
           return {
             link: link,
@@ -462,22 +466,20 @@ function updateObject(base, updated) {
   })
 }
 
-function findCourseUnitsForPlan(cc, year, coursePlan) {
-  // takes a course plan object (required, choices, choosenum, missing)
+function findCourseUnitsForPlan(cc, year, coursePlan, cb) {
   var units = {}
+  var courses = new Set()
   
-  // add required courses
+  // add the required courses to the list
   coursePlan.required.forEach((crs) => {
-    addCourseToUnits(units, cc, year, crs)
+    courses.add(crs)
   })
   
   // add the courses in the choices blocks
   coursePlan.choices.forEach((choice) => {
-    console.log(choice)
     choice.forEach((grp) => {
-      console.log(grp)
       grp.forEach((crs) => {
-        addCourseToUnits(units, cc, year, crs)
+        courses.add(crs)
       })
     })
   })
@@ -485,18 +487,25 @@ function findCourseUnitsForPlan(cc, year, coursePlan) {
   // add the courses in the chooseNum blocks
   coursePlan.choosenum.forEach((grp) => {
     grp.choices.forEach((crs) => {
-      addCourseToUnits(units, cc, year, crs)
+      courses.add(crs)
     })
   })
   
-  return units
+  courses.forEach((crs) => {
+    db.getUnits(cc, year, crs, (err, unitCnt) => {
+      // don't throw an error if a course's units are undefined
+      if (err) {
+        console.log("ERROR", err)
+        units[crs] = 'MISSING'
+      }
+      else {
+        units[crs] = unitCnt
+      }
+      if (Object.keys(units).length === courses.size) {
+        cb(units)
+      }
+    })
+  })
 }
-        
-function addCourseToUnits(units, cc, year, courseName) {
-  if (ccs[cc][year][courseName])
-    units[courseName] = ccs[cc][year][courseName]
-}
-  
-  
 
 module.exports = router

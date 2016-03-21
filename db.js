@@ -1,5 +1,6 @@
 // TODO add setup function to create table, secondary indexes
 var r = require('rethinkdb')
+var Promise = require('bluebird')
 
 module.exports.findCcs = (cb) => {
   // callback accepts (status, json)
@@ -248,3 +249,134 @@ module.exports.getUnits = (cc, year, course, cb) => {
     cb(err, null)
   })
 }
+
+module.exports.insertOrUpdatePlan = (cc, year, uni, major, reqBody, cb) => {
+  var plan = JSON.parse(reqBody['courses'])
+  var units = JSON.parse(reqBody['units'])
+  updatePlan(cc, year, uni, major, plan)
+  .then(() => {
+    return addOrUpdateUnits(cc, year, units)
+  })
+  .then(() => {
+    cb()
+  })
+  .error((err) => {
+    if (err.name === 'ReqlDriverError' && err.message === 'No more rows in the cursor.') {
+      addPlan(cc, year, uni, major, reqBody)
+      .then(() => {
+        return addOrUpdateUnits(cc, year, units)
+      })
+      .then(() => {
+        cb()
+      })
+    }
+    else {
+      throw err
+    }
+  })
+}
+
+var updatePlan = Promise.promisify((cc, year, uni, major, plan, cb) => {
+  var conn = null
+  r.connect({db: 'course_plan'})
+  .then((connection) => {
+    conn = connection
+    return r.table('plans')
+            .getAll([cc, year, uni, major], {index: 'college_year_uni_major'})
+            .run(conn)
+  })
+  .then((cursor) => {
+    return cursor.next()
+  })
+  .then((row) => {
+    return r.table('plans').get(row['id'])
+            .update({'plan': plan}).run(conn)
+    .error((err) => {
+      throw err
+    })
+  })
+  .then(() => {
+    cb(null)
+  })
+  .error((err) => {
+    cb(err)
+  })
+})
+
+var addOrUpdateUnits = Promise.promisify((cc, year, unitsObj, cb) => {
+  Promise.map(Object.keys(unitsObj), (crs) => {
+    return updateUnits(cc, year, crs, unitsObj[crs])
+    .error((err) => {
+      if (err.name === 'ReqlDriverError' && err.message === 'No more rows in the cursor.') {
+        return addUnits(cc, year, crs, unitsObj[crs])
+      }
+      else {
+        throw err
+      }
+    })
+  })
+  .then(() => {
+    cb()
+  })
+})
+
+var updateUnits = Promise.promisify((cc, year, course, units, cb) => {
+  var conn = null
+  r.connect({db: 'course_plan'})
+  .then((connection) => {
+    conn = connection
+    return r.table('units').getAll([cc, year, course], {index: 'cc_year_course'}).run(conn)
+  })
+  .then((cursor) => {
+    return cursor.next()
+  })
+  .then((row) => {
+     return r.table('units').get(row['id']).update({'units': units}).run(conn)
+  })
+  .then(() => {
+    cb(null)
+  })
+  .error((err) => {
+    cb(err)
+  })
+})
+
+var addUnits = Promise.promisify((cc, year, course, units, cb) => {
+  r.connect({db: 'course_plan'})
+  .then((conn) => {
+    return r.table('units').insert({
+      'cc': cc,
+      'year': year,
+      'course': course,
+      'units': units
+    }).run(conn)
+  })
+  .then(() => {
+    cb(null)
+  })
+  .error((err) => {
+    cb(err)
+  })
+})
+
+var addPlan = Promise.promisify((cc, year, uni, major, reqBody, cb) => {
+  r.connect({db: 'course_plan'})
+  .then((conn) => {
+    return r.table('plans').insert({
+      'college': cc,
+      'college_name': reqBody['college_name'],
+      'year': year,
+      'uni': uni,
+      'uni_name': reqBody['uni_name'],
+      'major': major,
+      'major_name': reqBody['major_name'],
+      'plan': JSON.parse(reqBody['courses'])
+    }).run(conn)
+  })
+  .then(() => {
+    cb(null)
+  })
+  .error(() => {
+    throw err
+  })
+})

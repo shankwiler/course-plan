@@ -100,9 +100,14 @@ router.get(/^\/plan.*/, (req, res) => {
         // generate json w/ courses, universities they're for, and their unit counts
         courseLists(cc, year, uniMajors, (err, data) => {
           if (err) {
+            res.status(500).json({
+              'error': 'problem finding units'
+            })
             throw err
           }
-          res.json(data[0]) // 0 index is the most efficient
+          else {
+            res.json(data[0]) // 0 index is the most efficient
+          }
         })
       }
     })
@@ -187,7 +192,7 @@ function courseLists(cc, year, uniMajors, cb) {
         unitCnt += units
       })
       .error((err) => {
-        cb('error getting units')
+        cb(err)
       })
     })
     .then(() => {

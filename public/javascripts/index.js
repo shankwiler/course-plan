@@ -1,9 +1,3 @@
-// TODO the structure of the plans json is just messed up. Really the course lists
-// should be in their own object so you don't have to worry about "name" showing up
-// as what could be considered a course
-// TODO add course agreement plan year
-// TODO include unit count for each course for /plan/ endpoint and for front end as well
-
 $(function () {
   var nextRowNum = 1
   loadCCs()

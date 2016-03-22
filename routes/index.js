@@ -1,7 +1,6 @@
 var express = require('express')
 var Promise = require('bluebird')
 var router = express.Router()
-var http = require('http')
 var db = require('../db.js')
 
 /* GET home page. */
@@ -16,11 +15,11 @@ router.get('/ccs', (req, res) => {
 })
 
 router.get(/^\/years.*/, (req, res) => {
-  var split, cc, yrs, nameInd
-  split = req.url.split('/')
-  cc = split[2]
-  if(split[split.length -1] === '')
+  var split = req.url.split('/')
+  var cc = split[2]
+  if (split[split.length - 1] === '') {
     split = split.slice(0, -1)
+  }
   if (split.length !== 3 || split[2] === '') {
     res.status(400).end('format: /years/cc/')
     return
@@ -31,35 +30,35 @@ router.get(/^\/years.*/, (req, res) => {
 })
 
 router.get(/^\/unis.*/, (req, res) => {
-  var split, cc, year
-  split = req.url.split('/')
+  var split = req.url.split('/')
   // get rid of trailing whitespace if ending / is added
-  if (split[split.length - 1] === '')
+  if (split[split.length - 1] === '') {
     split = split.slice(0, -1)
+  }
   if (split.length !== 4) {
     res.status(400).send('format: /unis/communitycollege/year')
     return
   }
-  cc = split[2]
-  year = split[3]
+  var cc = split[2]
+  var year = split[3]
   db.findUnis(cc, year, (stat, result) => {
     res.status(stat).json(result)
   })
 })
 
 router.get(/^\/majors.*/, (req, res) => {
-  var urlSplit, college, uni, year
-  urlSplit = req.url.split('/').slice(2)
+  var urlSplit = req.url.split('/').slice(2)
   // get rid of trailing whitespace if ending / is added
-  if (urlSplit[urlSplit.length - 1] === '')
+  if (urlSplit[urlSplit.length - 1] === '') {
     urlSplit = urlSplit.slice(0, -1)
+  }
   if (urlSplit.length !== 3) {
     res.status(400).end('format: /majors/communitycollege/year/university/')
     return
   }
-  college = urlSplit[0]
-  year = urlSplit[1]
-  uni = urlSplit[2]
+  var college = urlSplit[0]
+  var year = urlSplit[1]
+  var uni = urlSplit[2]
   db.findMajors(college, year, uni, (stat, result) => {
     res.status(stat).json(result)
   })
@@ -68,8 +67,9 @@ router.get(/^\/majors.*/, (req, res) => {
 router.get(/^\/plan.*/, (req, res) => {
   var urlSplit = req.url.split('/').slice(2)
   // get rid of trailing whitespace if ending / is added
-  if (urlSplit[urlSplit.length - 1] === '')
+  if (urlSplit[urlSplit.length - 1] === '') {
     urlSplit = urlSplit.slice(0, -1)
+  }
   if (urlSplit.length < 3) {
     res.status(400).send('format: /plan/communitycollege/year/uni,major/uni,major/')
     return
@@ -80,8 +80,9 @@ router.get(/^\/plan.*/, (req, res) => {
   var uniMajors = []
   var valid = true
   urlSplit.slice(2).forEach((item) => {
-    if (!valid)
+    if (!valid) {
       return
+    }
     var separated = item.split(',')
     var currUni = separated[0]
     var currMajor = separated[1]
@@ -104,8 +105,7 @@ router.get(/^\/plan.*/, (req, res) => {
               'error': 'problem finding units'
             })
             throw err
-          }
-          else {
+          } else {
             res.json(data[0]) // 0 index is the most efficient
           }
         })
@@ -114,43 +114,37 @@ router.get(/^\/plan.*/, (req, res) => {
   })
 })
 
-// TODO look back over airbnb style guide. Find things to fix such as dot
-// vs bracket notation etc.
-// TODO required courses may be able to be shoved into the compilation of 
-// data for course options, rather than doing it separately (w/ reqs).
-// may be cleaner.
-
-function courseLists(cc, year, uniMajors, cb) {
+function courseLists (cc, year, uniMajors, cb) {
   // The meat of this site. Finds the optimal course plan
   var reqs = {}
-  
+
   // add the required courses for each university
   uniMajors.forEach((uniMajor) => {
     var plan = uniMajor['plan']
     plan['required'].forEach((crs) => {
-      if (crs in reqs)
+      if (crs in reqs) {
         reqs[crs].push(uniMajor.uni)
-      else
+      } else {
         reqs[crs] = [uniMajor.uni]
+      }
     })
   })
-  
+
   // compile the data of course options
   var data = []
   uniMajors.forEach((uniMajor) => {
     var plan = uniMajor['plan']
     plan['choices'].forEach((choice) => {
-      data.push({'uni':uniMajor.uni, 'courses': choice})
+      data.push({'uni': uniMajor.uni, 'courses': choice})
     })
-    //console.log('plan', plan)
     plan['choosenum'].forEach((group) => {
       data.push({
-        'uni': uniMajor.uni, 
+        'uni': uniMajor.uni,
         'courses': chooseK(group['choices'], group['num'])
       })
     })
   })
-  
+
   // find the most efficient combination
   var combos = findCombos(data)
   var courseLists = [] // an array of course combinations
@@ -165,14 +159,14 @@ function courseLists(cc, year, uniMajors, cb) {
           if (courseList[crs].indexOf(grp['uni']) === -1) {
             courseList[crs].push(grp['uni'])
           }
-        }
-        else
+        } else {
           courseList[crs] = [grp['uni']]
+        }
       })
     })
     courseLists.push(courseList)
   })
-  
+
   var getUnits = Promise.promisify(db.getUnits)
   var unitCnt = 0
   var indices = []
@@ -205,10 +199,12 @@ function courseLists(cc, year, uniMajors, cb) {
   .then(() => {
     // sort the list so lowest count is first
     courseLists.sort((lstA, lstB) => {
-      if (lstA['units'] > lstB['units'])
+      if (lstA['units'] > lstB['units']) {
         return 1
-      if (lstA['units'] < lstB['units'])
+      }
+      if (lstA['units'] < lstB['units']) {
         return -1
+      }
       return 0
     })
   })
@@ -217,7 +213,7 @@ function courseLists(cc, year, uniMajors, cb) {
   })
 }
 
-function findCombos(data) {
+function findCombos (data) {
   // Takes an array of objects as follows:
   // [{
   // 'uni':'uni name',
@@ -230,17 +226,17 @@ function findCombos(data) {
   //    ]
   // }]
   // the different options are compiled into a list of possible options
-    
+
   // recursive helper function
-  function makeCombos(data, combos, ind, chain) {
+  function makeCombos (data, combos, ind, chain) {
     // combos is an array of possible combinations, ind is the current
     // index of courses being looked at, chain is the previously chosen
     // course group for this possibility
-    if (ind == data.length)
+    if (ind === data.length) {
       combos.push(chain)
-    else {
-      data[ind]['courses'].forEach(function(grp) {
-        newChain = chain.slice()
+    } else {
+      data[ind]['courses'].forEach((grp) => {
+        var newChain = chain.slice()
         newChain.push({
           'uni': data[ind]['uni'],
           'courses': grp
@@ -249,29 +245,29 @@ function findCombos(data) {
       })
     }
   }
-  combos = []
+  var combos = []
   makeCombos(data, combos, 0, [])
   return combos
 }
 
-function chooseK(data, k) {
+function chooseK (data, k) {
   // this function generates course group options, for the case where
   // there is a choosenum set. For example: choose 2 from ['a','b','c']
   // will return [['a','b'],['a','c'],['b','c']]
-  
+
   // helper function acts similarly to the makeComos function in findCombos()
-  function makeCombos(data, combos, k, chain, ind) {
-    if (chain.length == k)
+  function makeCombos (data, combos, k, chain, ind) {
+    if (chain.length === k) {
       combos.push(chain)
-    else {
+    } else {
       for (var i = ind + 1; i < data.length; i++) {
         var newChain = chain.slice()
         newChain.push(data[i])
         makeCombos(data, combos, k, newChain, i)
-      } 
-    } 
+      }
+    }
   }
-  combos = []
+  var combos = []
   makeCombos(data, combos, k, [], -1)
   return combos
 }

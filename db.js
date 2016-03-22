@@ -67,7 +67,7 @@ module.exports.setup = () => {
     }
   })
 }
-    
+
 module.exports.findCcs = (cb) => {
   // callback accepts (status, json)
   var conn = null
@@ -165,8 +165,7 @@ module.exports.findUnis = (cc, year, cb) => {
           error: err
         })
       })
-    }
-    else {
+    } else {
       cb(200, ret)
     }
   })
@@ -201,8 +200,7 @@ module.exports.findMajors = (cc, year, uni, cb) => {
           error: err
         })
       })
-    }
-    else {
+    } else {
       cb(200, ret)
     }
   })
@@ -219,7 +217,7 @@ module.exports.findMajors = (cc, year, uni, cb) => {
 module.exports.findFault = (cc, year, uni, major, cb) => {
   // cb accepts a failure message
   if (!cc) {
-    throw 'no cc passed to findFault'
+    throw Error('no cc passed to findFault')
   }
   var failureFound = false
   var conn = null
@@ -282,7 +280,7 @@ module.exports.findFault = (cc, year, uni, major, cb) => {
   // if no failure found, pass null
   .then(() => {
     if (!failureFound) {
-     cb(null)
+      cb(null)
     }
   })
   .error((err) => {
@@ -317,8 +315,7 @@ module.exports.getPlan = (cc, year, uni, major, cb) => {
           err: errMsg
         })
       })
-    }
-    else {
+    } else {
       throw err
     }
   })
@@ -372,8 +369,7 @@ module.exports.insertOrUpdatePlan = (cc, year, uni, major, reqBody, cb) => {
       .then(() => {
         cb()
       })
-    }
-    else {
+    } else {
       throw err
     }
   })
@@ -417,8 +413,7 @@ var addOrUpdateUnits = Promise.promisify((cc, year, unitsObj, cb) => {
     .error((err) => {
       if (err.name === 'ReqlDriverError' && err.message === 'No more rows in the cursor.') {
         return addUnits(cc, year, crs, unitsObj[crs])
-      }
-      else {
+      } else {
         throw err
       }
     })
@@ -439,7 +434,7 @@ var updateUnits = Promise.promisify((cc, year, course, units, cb) => {
     return cursor.next()
   })
   .then((row) => {
-     return r.table('units').get(row['id']).update({'units': units}).run(conn)
+    return r.table('units').get(row['id']).update({'units': units}).run(conn)
   })
   .then(() => {
     cb(null)
@@ -498,7 +493,7 @@ var addPlan = Promise.promisify((cc, year, uni, major, reqBody, cb) => {
   .then(() => {
     cb(null)
   })
-  .error(() => {
+  .error((err) => {
     throw err
   })
   .finally(() => {

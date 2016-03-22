@@ -2,19 +2,17 @@ var express = require('express')
 var router = express.Router()
 var http = require('http')
 var db = require('../db.js')
-var fs = require('fs')
 
-router.get('/', function(req, res, next) {
-  res.render('parser', {title: 'parse' })
+router.get('/', (req, res, next) => {
+  res.render('parser', {title: 'parse'})
 })
 
 router.get('/ccs', (req, res) => {
   // TODO use loadOptions function
-  
+
   http.get('http://www.assist.org/web-assist/welcome.html', (aRes) => {
     var html
     html = ''
-    
     aRes.setEncoding('utf8')
     aRes.on('data', (chunk) => {
       html += chunk
@@ -24,7 +22,7 @@ router.get('/ccs', (req, res) => {
       list = html.split('</option>').slice(1, -1).map((line) => {
         return dataFromLine(line)
       })
-      res.json({opts:list})
+      res.json({opts: list})
     })
   }).on('error', (e) => {
     console.log(e)
@@ -40,10 +38,11 @@ router.get(/^\/years.*/, (req, res) => {
   }
   cc = req.url.split('/')[2]
   pullOpts('http://www.assist.org/web-assist/' + cc, 'helptextAY\')">', (data) => {
-    if (data.status !== 200)
+    if (data.status !== 200) {
       res.status(data.status).end()
-    else
-      res.json({opts:data.json})
+    } else {
+      res.json({opts: data.json})
+    }
   })
 })
 
@@ -57,10 +56,11 @@ router.get(/^\/unis.*/, (req, res) => {
   assistUrl = split[2]
   console.log(assistUrl)
   pullOpts('http://www.assist.org/web-assist/' + assistUrl, 'campus<', (data) => {
-    if (data.status !== 200)
+    if (data.status !== 200) {
       res.status(data.status).end()
-    else
-      res.json({opts:data.json})
+    } else {
+      res.json({opts: data.json})
+    }
   })
 })
 
@@ -73,9 +73,9 @@ router.get(/^\/majors.*/, (req, res) => {
   }
   assistUrl = split[2]
   pullOpts('http://www.assist.org/web-assist/' + assistUrl, 'Select a major', (data) => {
-    if (data.status !== 200)
+    if (data.status !== 200) {
       res.status(data.status).end()
-    else {
+    } else {
       var ret
       ret = {}
       ret.opts = data.json
@@ -84,7 +84,6 @@ router.get(/^\/majors.*/, (req, res) => {
     }
   })
 })
-
 
 router.get(/^\/plan.*/, (req, res) => {
   var split, assistUrl
@@ -136,56 +135,10 @@ router.post(/^\/data.*/, (req, res) => {
   year = split[3]
   uni = split[4]
   major = split[5]
-  
-  db.insertOrUpdatePlan(cc, year, uni, major, req.body, () => {res.send('ok'); console.log('ok')})
-  
-  /*
-  if (!plans[cc]) {
-    plans[cc] = {}
-    plans[cc]['name'] = req.body.college_name
-  }
-  console.log('hi.125')
-  if (!plans[cc][year])
-    plans[cc][year] = {}
-  console.log('hi.25')
-  if (!plans[cc][year][uni]) {
-    plans[cc][year][uni] = {}
-    plans[cc][year][uni]['name'] = req.body.uni_name
-  }
-  console.log('hi.5')
-  if (!plans[cc][year][uni][major])
-    plans[cc][year][uni][major] = {}
-  
-  console.log('hi1')
-  
-  plans[cc][year][uni][major] = JSON.parse(req.body.courses)
-  plans[cc][year][uni][major]['name'] = req.body.major_name
-  
-  
-  //console.log(JSON.stringify(req.body.courses, null, '  ').replace(/\\n/g, '\n').replace(/\\\"/g, '"'))
-  
-  fs.writeFile(__dirname + '/../data/plans.json', JSON.stringify(plans, null, '  '), (err) => {
-    if (err)
-      throw err
-    console.log('saved courses')
+
+  db.insertOrUpdatePlan(cc, year, uni, major, req.body, () => {
+    res.send('success')
   })
-  
-  if(!ccs[cc])
-    ccs[cc] = {}
-  if(!ccs[cc][year])
-    ccs[cc][year] = {}
-  
-  updateObject(ccs[cc][year], JSON.parse(req.body.units))
-  
-  fs.writeFile(__dirname + '/../data/ccs.json', JSON.stringify(ccs, null, '  '), (err) => {
-    if (err)
-      throw err
-    console.log('saved units')
-  })
-  
-  res.send('success')
-  */
-  
 })
 
 router.get(/^\/guess.*/, (req, res) => {
@@ -218,14 +171,14 @@ router.get(/^\/guess.*/, (req, res) => {
   })
 })
 
-function dataFromLine(line) {
+function dataFromLine (line) {
   return {
     link: line.substring(line.search('value="') + 7, line.search('">')),
     name: line.substring(line.search('">') + 2)
   }
 }
 
-function getPlan(url, cb) {
+function getPlan (url, cb) {
   var fullUrl = 'http://www.assist.org/web-assist/' + url
   http.get(fullUrl, (res) => {
     if (res.statusCode !== 200) {
@@ -240,9 +193,7 @@ function getPlan(url, cb) {
     })
     res.on('end', () => {
       var planUrl
-      console.log(planUrl)
       planUrl = html.split('<iframe')[1].split('src="')[1].split('"')[0]
-      //getPlanText(planUrl, cb)
       cb(planUrl)
     })
   }).on('error', (e) => {
@@ -250,7 +201,7 @@ function getPlan(url, cb) {
   })
 }
 
-function pullOpts(url, sep, callback) {
+function pullOpts (url, sep, callback) {
   // returns json with status, json (list of options), html
   // TODO refactor code so one function returns html, another parses,
   // would be much cleaner
@@ -259,15 +210,14 @@ function pullOpts(url, sep, callback) {
       callback({
         status: res.statusCode
       })
-    }
-    else {
+    } else {
       var html
       html = ''
       res.setEncoding('utf8')
       res.on('data', (chunk) => {
         html += chunk
       })
-      
+
       res.on('end', () => {
         var list, block, lines, valSubstr, endValLoc, link, uni
         if (html.indexOf(sep) === -1) {
@@ -291,22 +241,22 @@ function pullOpts(url, sep, callback) {
           json: list,
           html: html
         })
-      })                   
+      })
     }
   }).on('error', (e) => {
     console.log(e)
   })
 }
 
-function parseMajorForm(html) {
+function parseMajorForm (html) {
   var page, qstr
   html = html.split('<form name="major"')[1].split('</select>')[0]
   page = html.substring(html.indexOf('action="') + 8)
   page = page.substring(0, page.indexOf('">'))
-  
+
   // for the inputs before the major select box, get their name and value
   qstr = ''
-  html.split('<select')[0].split('\n').forEach(function (line) {
+  html.split('<select')[0].split('\n').forEach((line) => {
     if (line.indexOf('<input') !== -1) {
       var name, val
       name = line.split('name="')[1].split('"')[0]
@@ -315,18 +265,18 @@ function parseMajorForm(html) {
     }
   })
   qstr = qstr.substring(0, qstr.length - 1)
-  
+
   return page + '?' + qstr
 }
 
-function parsePlan(data) {
+function parsePlan (data) {
   // TODO put code into functions to make easier to read.
-  
+
   var sep = /--------------------------------------------------------------------------------|AND/
   var reOr = />\s*OR\s*<.*\|/
-  
+
   var blocks = data.split(sep)
-  
+
   var courses = {
     'required': [],
     'choices': [],
@@ -341,68 +291,70 @@ function parsePlan(data) {
       grps.forEach((grp) => {
         opts.push(getCourses(grp))
       })
-      
+
       allMiss = true
       opts.forEach((opt) => {
         opt.forEach((crs) => {
-          if (crs.split(' ')[0] !== 'missing')
+          if (crs.split(' ')[0] !== 'missing') {
             allMiss = false
+          }
         })
       })
-      
+
       if (allMiss) {
         var str = ''
         opts.forEach((opt, i) => {
-          if (i !== 0)
+          if (i !== 0) {
             str += ' or '
+          }
           str += opt.map((crs) => {
             return crs.substr(crs.search(' ') + 1)
           }).join(' and ')
         })
         courses.missing.push(str)
-      }
-      else {
+      } else {
         var newOpts
         newOpts = []
         opts.forEach((opt) => {
           var valid
           valid = true
           opt.forEach((crs) => {
-            if (crs.includes('missing'))
+            if (crs.includes('missing')) {
               valid = false
+            }
           })
-          if (valid)
+          if (valid) {
             newOpts.push(opt)
+          }
         })
-        
+
         if (newOpts.length === 1) {
           newOpts[0].forEach((crs) => {
             courses.required.push(crs)
           })
-        }
-        else
+        } else {
           courses.choices.push(opts)
-           
+        }
       }
-    }
-    else {
+    } else {
       getCourses(block).forEach((crs) => {
         if (crs.split(' ')[0] === 'missing') {
           var crsName
           crsName = crs.split(' ').slice(1).join(' ')
-          if (courses.missing.indexOf(crsName) === -1)
+          if (courses.missing.indexOf(crsName) === -1) {
             courses.missing.push(crsName)
-        }
-        else if (courses.required.indexOf(crs) === -1)
+          }
+        } else if (courses.required.indexOf(crs) === -1) {
           courses.required.push(crs)
+        }
       })
     }
   })
-  
+
   return courses
 }
 
-function getCourses(str) {
+function getCourses (str) {
   var courses, prevAnd, prevMissing
   prevAnd = null
   prevMissing = false
@@ -410,31 +362,31 @@ function getCourses(str) {
   str.split('\n').forEach((line) => {
     var ccCourse = /\([0-9]+(\.[0-9]+)?\)$/.exec(line) // (0-9) found at end of line
     var uniCourse = /\([0-9]+(\.[0-9]+)?\)\|/.exec(line) // (0-9)| found in line
-    
+
     // if there's a uni course and no cc course and either there was no &
     // sign on the past uni course, or there was and that course was missing
-    if (uniCourse && !ccCourse && 
-      (!prevAnd || (prevAnd && prevMissing))) {
-      courses.push('missing ' + line.split(' ').slice(0,2).join(' '))
+    if (uniCourse && !ccCourse && (!prevAnd || (prevAnd && prevMissing))) {
+      courses.push('missing ' + line.split(' ').slice(0, 2).join(' '))
       prevMissing = true
     }
-    
+
     if (ccCourse) {
       courses.push(
         line.slice(line.search(/\|/) + 1) // line after |
-        .split(' ').slice(0,2).join(' ') // take first two words
+        .split(' ').slice(0, 2).join(' ') // take first two words
       )
       prevMissing = false
     }
-    
-    if (uniCourse)
+
+    if (uniCourse) {
       prevAnd = />\s*\&\s*<.*\|/.exec(line)
+    }
   })
-  
+
   return courses
 }
 
-function getUnits(str) {
+function getUnits (str) {
   var units
   units = {}
   str.split('\n').forEach((line) => {
@@ -446,33 +398,28 @@ function getUnits(str) {
       var course = line.split('|')[1]
       if (course) {
         var andFound = course.search(/<b/i)
-        if (andFound !== -1)
+        if (andFound !== -1) {
           course = course.substr(0, andFound)
-        else
+        } else {
           course = course.substr(0, course.search(/\ \ /))
+        }
         units[course] = unitCnt
       }
     }
   })
-  
+
   return units
 }
 
-function updateObject(base, updated) {
-  Object.keys(updated).forEach((key) => {
-    base[key] = updated[key]
-  })
-}
-
-function findCourseUnitsForPlan(cc, year, coursePlan, cb) {
+function findCourseUnitsForPlan (cc, year, coursePlan, cb) {
   var units = {}
   var courses = new Set()
-  
+
   // add the required courses to the list
   coursePlan.required.forEach((crs) => {
     courses.add(crs)
   })
-  
+
   // add the courses in the choices blocks
   coursePlan.choices.forEach((choice) => {
     choice.forEach((grp) => {
@@ -481,22 +428,21 @@ function findCourseUnitsForPlan(cc, year, coursePlan, cb) {
       })
     })
   })
-  
+
   // add the courses in the chooseNum blocks
   coursePlan.choosenum.forEach((grp) => {
     grp.choices.forEach((crs) => {
       courses.add(crs)
     })
   })
-  
+
   courses.forEach((crs) => {
     db.getUnits(cc, year, crs, (err, unitCnt) => {
       // don't throw an error if a course's units are undefined
       if (err) {
-        console.log("ERROR", err)
+        console.log('ERROR', err)
         units[crs] = 'MISSING'
-      }
-      else {
+      } else {
         units[crs] = unitCnt
       }
       if (Object.keys(units).length === courses.size) {

@@ -4,12 +4,24 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var auth = require('http-auth')
 
 var routes = require('./routes/index');
 var parser = require('./routes/parser');
 var db = require('./db.js')
 
 var app = express();
+if (app.get('env') === 'production') {
+  app.use('/parser', auth.connect(auth.basic({
+    realm: 'parser'
+  }, (usr, pass, cb) => {
+    cb(usr === process.env.USERNAME && pass === process.env.PASSWORD)
+  })))
+}
+
+if (app.get('env') !== 'production') {
+  console.log('WARNING: Not in production mode.')
+}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

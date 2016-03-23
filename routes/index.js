@@ -168,12 +168,12 @@ function courseLists (cc, year, uniMajors, cb) {
   })
 
   var getUnits = Promise.promisify(db.getUnits)
-  var unitCnt = 0
   var indices = []
   courseLists.forEach((el, i) => {
     indices.push(i)
   })
   Promise.map(indices, (i) => {
+    var unitCnt = 0
     return Promise.map(Object.keys(courseLists[i]), (crs) => {
       // also change the courseList to hold both the universities for each
       // course AND the unit count for that course

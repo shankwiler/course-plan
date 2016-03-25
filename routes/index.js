@@ -168,15 +168,27 @@ function courseLists (cc, year, uniMajors, cb) {
   })
 
   var getUnits = Promise.promisify(db.getUnits)
+  var foundCourses = {} // to avoid querying db excessively
   var indices = []
   courseLists.forEach((el, i) => {
     indices.push(i)
   })
-  Promise.map(indices, (i) => {
+  Promise.each(indices, (i) => {
     var unitCnt = 0
     return Promise.map(Object.keys(courseLists[i]), (crs) => {
-      // also change the courseList to hold both the universities for each
+      // change the courseList to hold both the universities for each
       // course AND the unit count for that course
+      
+      // if the course has already been queried from the db
+      if (crs in foundCourses) {
+        courseLists[i][crs] = {
+          'unis': courseLists[i][crs],
+          'units': foundCourses[crs]
+        }
+        unitCnt += foundCourses[crs]
+        return
+      }
+      // if the course needs to be found in the db
       return getUnits(cc, year, crs)
       .then((units) => {
         courseLists[i][crs] = {
@@ -184,6 +196,7 @@ function courseLists (cc, year, uniMajors, cb) {
           'units': units
         }
         unitCnt += units
+        foundCourses[crs] = units
       })
       .error((err) => {
         cb(err)

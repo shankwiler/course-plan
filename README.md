@@ -1,6 +1,6 @@
 # Course Plan
 
-<!--Check out the [live site](http://kylecodes.me)!-->
+Check out the [live site](http://kylecodes.me)!
 
 ## What is it?
 

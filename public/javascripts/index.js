@@ -4,11 +4,13 @@ $(function () {
 
   $('body').on('change', '.college-select', function () {
     clearRows()
+    loadYears(loadUnis)
     nextRowNum = 1
   })
 
   $('body').on('change', '.year-select', function () {
     clearRows()
+    loadUnis()
     nextRowNum = 1
   })
 
@@ -197,5 +199,4 @@ function clearRows () {
   $('.uni-major .select').remove()
   $('.uni-major br').remove()
   addRow(0)
-  loadYears(loadUnis)
 }

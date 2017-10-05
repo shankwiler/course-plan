@@ -13,17 +13,11 @@ var db = require('./db.js')
 var app = express()
 
 // add authentication for the /parser endpoint
-if (app.get('env') === 'production') {
-  app.use('/parser', auth.connect(auth.basic({
-    realm: 'parser'
-  }, (usr, pass, cb) => {
-    cb(usr === process.env.USERNAME && pass === process.env.PASSWORD)
-  })))
-}
-
-if (app.get('env') !== 'production') {
-  console.log('WARNING: Not in production mode.')
-}
+app.use('/parser', auth.connect(auth.basic({
+  realm: 'parser'
+}, (usr, pass, cb) => {
+  cb(usr === process.env.USERNAME && pass === process.env.PASSWORD)
+})))
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'))
